@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header';
+import ScrollToTop from './ScrollToTop';
 /**
  * Layout Component
  * Acts as the master wrapper for the entire application.
@@ -9,18 +10,17 @@ import Header from './Header';
 const Layout = ({children}) => {
     return (
         <div className='app-container'>
-            <Header />
-            <main className='main-content'>
-                {children}
-            </main>
+                <Header />
+                <main className='main-content'>
+                    {children}
+                </main>
 
-            <footer>
-                <p>
-                    &copy; {new Date().getFullYear()} The Veggie Vault 2026. All rights reserved.
-                </p>
-            </footer>
-            
-
+                <footer>
+                    <p>
+                        &copy; {new Date().getFullYear()} The Veggie Vault 2026. All rights reserved.
+                    </p>
+                </footer>
+                <ScrollToTop />
          </div>
     );
 }

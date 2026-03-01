@@ -1,0 +1,30 @@
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: slateblue;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.btn:hover {
+    background-color: orange;
+    transform: translateY(-3px); 
+}
+
+.show {
+    opacity: 0.85;
+    visibility: visible;
+}
+
+.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; 
+}
