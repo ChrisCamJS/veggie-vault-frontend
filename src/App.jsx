@@ -25,7 +25,7 @@ function App() {
                 <Route path='/admin' element={<AdminDashboard />}>
               </Route>
               <Route path='/login' element={<Login />} />
-              <Route path="*" element={<h2>404 Oh My Goodness Child - Page Not Found</h2>} />
+              <Route path="*" element={<h2>404: Oh My Goodness Gracious, Child - Page Not Found</h2>} />
             </Routes>
         </Layout>
       </Router>

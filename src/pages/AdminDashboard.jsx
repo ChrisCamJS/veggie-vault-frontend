@@ -1,6 +1,7 @@
 // src/pages/AdminDashboard.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
 import styles from './AdminDashboard.module.css';
 
 /**
@@ -10,6 +11,40 @@ import styles from './AdminDashboard.module.css';
  */
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('add');
+
+  // state for Manage Recipes
+  const [recipes, setRecipes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // <-- Items per page can be adjusted here
+
+    // fetch the recipes when switching to manage recipes tab
+    useEffect(() => {
+      if (activeTab === 'manage' && recipes.length === 0) {
+        loadRecipes();
+      }
+    }, [activeTab]);
+
+    const loadRecipes = async () => {
+      try {
+        const response = await api.getRecipes();
+        // adjust this
+        setRecipes(response || response.data);
+      }
+      catch (err) {
+        console.error("Failed to load the recipes", err);
+      }
+    }
+
+    // Dummy handlers for our action buttons (we'll wire these up to the API next)
+  const handleEdit = (id) => console.log(`Editing recipe ${id}`);
+  const handleDelete = (id) => console.log(`Deleting recipe ${id}`);
+  const handleToggleDraft = (id) => console.log(`Toggling draft status for recipe ${id} (DB update needed)`);
+
+  // Pagination math
+  const indexOfLastRecipe = currentPage * itemsPerPage;
+  const indexOfFirstRecipe = indexOfLastRecipe - itemsPerPage;
+  const currentRecipes = recipes.slice(recipes.length / itemsPerPage);
+  const totalPages = Math.ceil(recipes.length / itemsPerPage);
 
   return (
     <div className={styles.adminContainer}>
@@ -71,7 +106,50 @@ const AdminDashboard = () => {
           </section>
         ) : (
           <section className={styles.manageRecipes}>
-            <p>[ Table of existing recipes will go here for Edit/Delete actions ]</p>
+            <h3>Manage Vault Inventory</h3>
+            
+            {recipes.length === 0 ? (
+                <p>Loading your culinary masterpieces...</p>
+            ) : (
+                <>
+                    <div className={styles.recipeList}>
+                        {currentRecipes.map(recipe => (
+                            <div key={recipe.id} className={styles.recipeListItem}>
+                                <div className={styles.recipeInfo}>
+                                    <h4>{recipe.title}</h4>
+                                    <span className={styles.recipeMeta}>
+                                        ID: {recipe.id} | {recipe.yields || 'Yields unknown'}
+                                    </span>
+                                </div>
+                                <div className={styles.recipeActions}>
+                                    <button onClick={() => handleToggleDraft(recipe.id)} className={styles.draftBtn}>Hide</button>
+                                    <button onClick={() => handleEdit(recipe.id)} className={styles.editBtn}>Edit</button>
+                                    <button onClick={() => handleDelete(recipe.id)} className={styles.deleteBtn}>Delete</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {/* The Paginator */}
+                    <div className={styles.pagination}>
+                        <button 
+                            disabled={currentPage === 1} 
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            className={styles.pageBtn}
+                        >
+                            Previous
+                        </button>
+                        <span>Page {currentPage} of {totalPages || 1}</span>
+                        <button 
+                            disabled={currentPage === totalPages || totalPages === 0} 
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className={styles.pageBtn}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
+            )}
           </section>
         )}
       </main>

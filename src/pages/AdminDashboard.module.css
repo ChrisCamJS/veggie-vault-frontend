@@ -84,10 +84,131 @@
   background: #236026; /* Slightly darker green */
 }
 
+/* --- Manage Recipes Section --- */
+
+.manageRecipes {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+.manageRecipes h3 {
+    color: var(--vault-dark);
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 10px;
+}
+
+.recipeList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.recipeListItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #fdfdfd;
+    border: 1px solid #eaeaea;
+    border-left: 5px solid var(--primary-green);
+    border-radius: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recipeListItem:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+
+.recipeInfo h4 {
+    margin: 0 0 5px 0;
+    color: var(--vault-dark);
+    font-size: 1.2rem;
+}
+
+.recipeMeta {
+    font-size: 0.85rem;
+    color: #666;
+    font-family: monospace;
+}
+
+/* Action Buttons */
+.recipeActions {
+    display: flex;
+    gap: 10px;
+}
+
+.recipeActions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.draftBtn {
+    background: #f59e0b;
+    color: white;
+}
+
+.draftBtn:hover { background: #d97706; }
+
+.editBtn {
+    background: #3b82f6;
+    color: white;
+}
+
+.editBtn:hover { background: #2563eb; }
+
+.deleteBtn {
+    background: var(--blazer-red, #dc2626);
+    color: white;
+}
+
+.deleteBtn:hover { background: #b91c1c; }
+
+/* Pagination Controls */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eaeaea;
+    font-weight: bold;
+    color: var(--vault-dark);
+}
+
+.pageBtn {
+    background: var(--primary-green);
+    color: white;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+    background: #236026;
+}
+
+.pageBtn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
 /* --- Mobile View Fixes --- */
 @media (max-width: 768px) {
   .adminTabs {
-    flex-direction: column; /* Stacks the tabs on top of each other */
+    flex-direction: column; 
   }
 
   .formRow {
@@ -100,6 +221,6 @@
   }
 
   .adminForm {
-    padding: 20px; /* Gives a bit more breathing room on tiny screens */
+    padding: 20px;
   }
 }
