@@ -1,14 +1,14 @@
 // src/pages/EmmasRecipeEngine.jsx
 
 import React, { useState } from 'react';
-import { getSystemInstructions } from '../utils/promptBuilder';
-import { sendChatMessage, generateRecipeImage } from '../services/geminiApi'; 
-import RecipeForm from './RecipeDashboard/RecipeForm';
-import RecipeResult from './RecipeDashboard/RecipeResult';
-import './RecipeDashboard/RecipeDashboard.css'; // Adjust path if needed
+import { getSystemInstructions } from '../../utils/promptBuilder';
+import { sendChatMessage, generateRecipeImage } from '../../services/geminiApi'; 
+import RecipeForm from './RecipeForm';
+import RecipeResult from './RecipeResult';
+import './EmmasRecipeEngine.css';
 
 // NEW: Bring in the bouncer's guest list!
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const EmmasRecipeEngine = () => {
     // Grab the logged-in user

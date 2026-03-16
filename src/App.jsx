@@ -8,7 +8,7 @@ import WellnessTools from './pages/WellnessTools';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import EditRecipe from './pages/EditRecipe';
-import EmmasRecipeEngine from './pages/EmmasRecipeEngine'; 
+import EmmasRecipeEngine from './pages/Engine'; 
 import './App.css'
 
 function App() {
