@@ -1,0 +1,172 @@
+import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+
+const RecipeResult = ({ recipeMarkdown, imageUrl }) => {
+  const [speechState, setSpeechState] = useState('idle'); // 'idle', 'playing', or 'paused'
+
+  useEffect(() => {
+    window.speechSynthesis.getVoices();
+    return () => {
+      window.speechSynthesis.cancel();
+      setSpeechState('idle');
+    };
+  }, []);
+
+  const handleSpeak = () => {
+    if (!recipeMarkdown) return;
+
+    if (speechState === 'playing') {
+      window.speechSynthesis.pause();
+      setSpeechState('paused');
+      return;
+    }
+
+    if (speechState === 'paused') {
+      window.speechSynthesis.resume();
+      setSpeechState('playing');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    setSpeechState('playing');
+
+    const cleanText = recipeMarkdown.replace(/[#*`_]/g, '');
+    const textChunks = cleanText.split('\n').filter(line => line.trim() !== '');
+    const liveVoices = window.speechSynthesis.getVoices();
+    
+    const britishVoice = liveVoices.find(voice => voice.lang === 'en-GB' && voice.name.includes('Female')) 
+                      || liveVoices.find(voice => voice.lang === 'en-GB') 
+                      || liveVoices[0];
+
+    textChunks.forEach((chunk, index) => {
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      
+      if (britishVoice) {
+        utterance.voice = britishVoice;
+      }
+      
+      utterance.rate = 1.05; 
+      utterance.pitch = 1.1;
+
+      if (index === textChunks.length - 1) {
+        utterance.onend = () => setSpeechState('idle');
+      }
+      
+      utterance.onerror = () => setSpeechState('idle');
+
+      window.speechSynthesis.speak(utterance);
+    });
+  };
+
+  // --- THE NEW DOWNLOAD FUNCTION ---
+  const handleDownload = () => {
+    if (!recipeMarkdown) return;
+
+    // Be a clever girl and try to extract the recipe title for the filename
+    let filename = 'emma-wfpb-recipe.md';
+    const titleMatch = recipeMarkdown.match(/^#\s+(.+)$/m);
+    
+    if (titleMatch && titleMatch[1]) {
+      // Sanitize the title so it makes a proper, clean filename
+      const safeTitle = titleMatch[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      filename = `${safeTitle}.md`;
+    }
+
+    // Create a Blob containing the markdown text
+    const blob = new Blob([recipeMarkdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary hidden anchor tag to trigger the download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up our mess
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  let buttonText = "🗣️ Read Aloud";
+  let buttonColor = "#4a5568"; 
+
+  if (speechState === 'playing') {
+    buttonText = "⏸️ Pause Emma";
+    buttonColor = "#e53e3e"; 
+  } else if (speechState === 'paused') {
+    buttonText = "▶️ Resume";
+    buttonColor = "#48bb78"; 
+  }
+
+  if (!recipeMarkdown) return null;
+
+  return (
+    <div className="recipe-result-card">
+      
+      {/* Action Bar now has both buttons nicely aligned */}
+      <div className="result-actions" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
+        
+        <button 
+          onClick={handleDownload}
+          className="download-btn"
+          style={{
+            backgroundColor: '#2b6cb0', // A lovely trustworthy blue
+            color: 'white',
+            padding: '0.5rem 1rem',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          💾 Save Recipe
+        </button>
+
+        <button 
+          onClick={handleSpeak} 
+          className="speak-btn"
+          style={{
+            backgroundColor: buttonColor,
+            color: 'white',
+            padding: '0.5rem 1rem',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+
+      {imageUrl && (
+        <div className="recipe-image-container" style={{ marginBottom: '2rem', textAlign: 'center' }}>
+            <img 
+                src={imageUrl} 
+                alt="A glorious AI-generated WFPB meal" 
+                style={{ 
+                    maxWidth: '100%', 
+                    borderRadius: '12px', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+                }} 
+            />
+        </div>
+      )}
+
+      <div className="recipe-content">
+        <ReactMarkdown>
+          {recipeMarkdown}
+        </ReactMarkdown>
+      </div>
+      
+      <div className="recipe-footer">
+        <p><em>Generated by Emma Advanced for The Chris and Emma Show Premium Vault.</em></p>
+      </div>
+    </div>
+  );
+};
+
+export default RecipeResult;

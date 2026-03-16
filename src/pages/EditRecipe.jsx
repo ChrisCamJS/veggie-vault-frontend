@@ -1,12 +1,12 @@
-// src/pages/EditRecipe.jsx
+
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import styles from './AdminDashboard.module.css'; // <-- Reusing admin CSS!
+import styles from './AdminDashboard.module.css'; 
 
 const EditRecipe = () => {
-    const { id } = useParams(); // Grabs the ID straight out of the URL
+    const { id } = useParams(); 
     const navigate = useNavigate();
     
     const [isLoading, setIsLoading] = useState(true);
@@ -15,12 +15,56 @@ const EditRecipe = () => {
         ingredients: '', instructions: '', nutritionInfo: '', notes: '', imageUrl: ''
     });
 
-    // Fetch the recipe the moment the component loads
+// Fetch the recipe the moment the component loads
     useEffect(() => {
         const fetchRecipe = async () => {
             try {
                 const data = await api.getRecipesById(id);
                 
+                const parseVaultData = (item, fieldName) => {
+                    console.log(`[Emma's Parser] Inspecting ${fieldName}... Type: ${typeof item}`, item);
+
+                    if (!item) {
+                        console.log(`[Emma's Parser] ${fieldName} is empty. Returning blank.`);
+                        return '';
+                    }
+
+                    // Scenario 1: It's already a lovely array
+                    if (Array.isArray(item)) {
+                        console.log(`[Emma's Parser] ${fieldName} is an array. Joining with newlines.`);
+                        return item.join('\n');
+                    }
+
+                    // Scenario 2: It's a string (which might secretly be JSON)
+                    if (typeof item === 'string') {
+                        try {
+                            const parsed = JSON.parse(item);
+                            console.log(`[Emma's Parser] Ah ha! ${fieldName} was a JSON string. Parsed result:`, parsed);
+                            
+                            if (Array.isArray(parsed)) {
+                                return parsed.join('\n');
+                            } else if (typeof parsed === 'object' && parsed !== null) {
+                                // It's a structured object! Let's format it beautifully.
+                                return JSON.stringify(parsed, null, 2);
+                            }
+                            return item; 
+                        } catch (e) {
+                            console.log(`[Emma's Parser] ${fieldName} is just a standard string. Returning as is.`);
+                            return item; 
+                        }
+                    }
+
+                    // Scenario 3: The API handed us a raw object directly
+                    if (typeof item === 'object' && item !== null) {
+                         console.log(`[Emma's Parser] ${fieldName} came through as a raw object! Stringifying.`);
+                         return JSON.stringify(item, null, 2);
+                    }
+
+                    // Fallback for anything else utterly bizarre
+                    console.log(`[Emma's Parser] ${fieldName} is an unknown entity. Forcing to string.`);
+                    return String(item);
+                };
+
                 // The DB returns raw snake_case column names, so we map them to our camelCase state!
                 setRecipeForm({
                     title: data.title || '',
@@ -28,10 +72,9 @@ const EditRecipe = () => {
                     yields: data.yields || '',
                     prepTime: data.prep_time || '',
                     cookTime: data.cook_time || '',
-                    // Untangle the arrays back into newline-separated strings
-                    ingredients: Array.isArray(data.ingredients) ? data.ingredients.join('\n') : '',
-                    instructions: Array.isArray(data.instructions) ? data.instructions.join('\n') : '',
-                    nutritionInfo: Array.isArray(data.nutrition_info) ? data.nutrition_info.join('\n') : '',
+                    ingredients: parseVaultData(data.ingredients, 'ingredients'),
+                    instructions: parseVaultData(data.instructions, 'instructions'),
+                    nutritionInfo: parseVaultData(data.nutrition_info, 'nutritionInfo'),
                     notes: data.notes || '',
                     imageUrl: data.image_url || ''
                 });
@@ -47,13 +90,11 @@ const EditRecipe = () => {
         fetchRecipe();
     }, [id, navigate]);
 
-    // Handle standard text inputs
     const handleFormChange = (e) => {
         const { name, value } = e.target;
         setRecipeForm(prev => ({ ...prev, [name]: value }));
     };
 
-    // Re-using our brilliant image upload logic
     const handleImageUpload = async (e) => {
         const files = e.target.files;
         if (!files.length) return;
@@ -79,11 +120,9 @@ const EditRecipe = () => {
         }
     };
 
-    // Submit the edits
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         
-        // Repackage the strings back into arrays for the PHP backend
         const formattedData = {
             ...recipeForm,
             ingredients: recipeForm.ingredients.split('\n').filter(line => line.trim() !== ''),
@@ -95,7 +134,7 @@ const EditRecipe = () => {
             const response = await api.updateRecipe(id, formattedData);
             if (response.success) {
                 alert('Recipe successfully updated!');
-                navigate('/admin'); // Boot them back to the dashboard
+                navigate('/admin'); 
             }
         } catch (err) {
             console.error("Failed to update recipe:", err);
