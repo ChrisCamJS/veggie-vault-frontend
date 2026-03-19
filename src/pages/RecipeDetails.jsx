@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import NutritionPanel from '../components/NutritionPanel';
+import './RecipeDetails.css'; 
 
 // ============================================================================
 // COMPONENT: RecipeDetails
@@ -41,32 +42,32 @@ const RecipeDetails = () => {
   // --- CONDITIONAL RENDERING (Guards) ---
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-purple-600"></div>
-        <span className="ml-3 text-purple-600 font-bold">Decrypting vault entry...</span>
+      <div className="recipe-loading-screen">
+        <div className="recipe-spinner"></div>
+        <span className="recipe-loading-text">Decrypting vault entry...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto mt-10 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-center">
-        <h3 className="font-bold text-lg">Blimey, an error occurred!</h3>
+      <div className="recipe-message-box recipe-error">
+        <h3>Blimey, an error occurred!</h3>
         <p>{error}</p>
-        <Link to="/" className="text-red-900 underline mt-2 inline-block">Return to the Pantry</Link>
+        <Link to="/" className="recipe-return-link">Return to the Pantry</Link>
       </div>
     );
   }
 
   if (!recipe) {
     return (
-      <div className="max-w-2xl mx-auto mt-10 p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-center">
+      <div className="recipe-message-box recipe-warning">
         Recipe vanished into the ether.
       </div>
     );
   }
 
-  // Handle the image string
+  // Handle the image string parsing
   const targetImage = recipe?.imageUrl || recipe?.image_url; 
   const fullImageUrl = targetImage 
     ? (targetImage.startsWith('http') ? targetImage : `${API_URL}${targetImage}`)
@@ -74,47 +75,54 @@ const RecipeDetails = () => {
 
   // --- THE UI RENDER ---
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="recipe-page-container">
       
       {/* Back Button */}
-      <div className="mb-6">
-        <Link to="/" className="text-purple-600 hover:text-purple-800 font-semibold transition-colors">
+      <div className="recipe-back-wrapper">
+        <Link to="/" className="recipe-back-button">
           &larr; Back to Recipe Grid
         </Link>
       </div>
 
-      <div className='p-1 w-full'>
-        <img src={fullImageUrl} alt={recipe.title || 'A glorious WFPB meal'} style={{ width: '100%', height: 'auto', borderRadius: '8px', maxHeight: '500px', objectFit: 'cover' }} />
+      {/* Hero Image */}
+      <div className="recipe-image-wrapper">
+        <img 
+          src={fullImageUrl} 
+          alt={recipe.title || 'A glorious WFPB meal'} 
+          className="recipe-hero-image" 
+        />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mt-6">
-        <header className="bg-gradient-to-r from-purple-800 to-indigo-900 px-6 py-10 sm:px-10 text-white text-center sm:text-left">
+      {/* Main Recipe Card */}
+      <div className="recipe-card">
+        <header className="recipe-header">
           
           {/* Oil-Free Badge at the very top! */}
           {Boolean(Number(recipe.is_oil_free)) && (
-            <span className="inline-block bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-4 shadow-sm">
+            <span className="recipe-badge-oil-free">
               🌿 100% Oil-Free
             </span>
           )}
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
+          <h1 className="recipe-title">
             {recipe.title}
           </h1>
           
           {recipe.description && (
-            <p className="text-lg text-purple-200 mb-6 max-w-3xl">
+            <p className="recipe-description">
               {recipe.description}
             </p>
           )}
 
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm font-medium">
-            <span className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+          {/* Recipe Meta Info (Time & Yields) */}
+          <div className="recipe-meta-tags">
+            <span className="recipe-meta-tag">
               ⏱ Prep: {recipe.prep_time_mins || 0}m
             </span>
-            <span className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+            <span className="recipe-meta-tag">
               🔥 Cook: {recipe.cook_time_mins || 0}m
             </span>
-            <span className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+            <span className="recipe-meta-tag">
               🍽 Yields: {recipe.yields}
             </span>
           </div>
@@ -122,52 +130,48 @@ const RecipeDetails = () => {
 
         {/* CHEF'S NOTES & OIL RATIONALE */}
         {recipe.oil_rationale && (
-          <div className="bg-yellow-50 border-b border-yellow-100 p-6 sm:px-10">
-            <h4 className="font-bold text-yellow-800 flex items-center mb-2">
-              <span className="mr-2">📝</span> Culinary Rationale
+          <div className="recipe-rationale-box">
+            <h4 className="recipe-rationale-title">
+              <span className="icon-mr">📝</span> Culinary Rationale
             </h4>
-            <p className="text-yellow-900 text-sm">
+            <p className="recipe-rationale-text">
               {recipe.oil_rationale}
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 sm:p-10">
+        {/* Two-Column Grid for Content */}
+        <div className="recipe-content-grid">
           
           {/* Left Column: Ingredients & Instructions */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="recipe-main-col">
             
-            {/* Ingredients */}
-            <section>
-              <h3 className="text-2xl font-bold text-gray-800 border-b-2 border-purple-100 pb-2 mb-4">
-                Ingredients
-              </h3>
-              <ul className="space-y-3">
+            {/* Ingredients Section */}
+            <section className="recipe-section">
+              <h3 className="recipe-section-title">Ingredients</h3>
+              <ul className="recipe-ingredients-list">
                 {recipe.ingredients && recipe.ingredients.length > 0 ? (
                   recipe.ingredients.map((ing, index) => {
                     // --- THE DYNAMIC RENDER LOGIC ---
-                    // If quantity is 0 or 1 (our AI placeholders), we hide it 
-                    // and just show the full text in ingredient_name.
+                    // Hide 0 or 1 placeholders.
                     const hasRealQuantity = Number(ing.quantity) !== 0 && Number(ing.quantity) !== 1;
                     const hasRealUnit = ing.unit && ing.unit !== 'serving' && ing.unit !== '';
 
                     return (
-                      <li key={index} className="flex items-start text-gray-700 py-1 border-b border-gray-50 last:border-0">
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">
-                          ✓
-                        </span>
-                        <div className="flex flex-wrap gap-1">
+                      <li key={index} className="recipe-ingredient-item">
+                        <span className="recipe-ingredient-bullet">&#10003;</span>
+                        <div className="recipe-ingredient-text">
                           {hasRealQuantity && (
-                            <span className="font-bold text-purple-700">
-                              {Number(ing.quantity)}
+                            <span className="recipe-ingredient-highlight">
+                            	{Number(ing.quantity)}
                             </span>
                           )}
                           {hasRealUnit && (
-                            <span className="font-bold text-purple-700">
+                            <span className="recipe-ingredient-highlight">
                               {ing.unit}
                             </span>
                           )}
-                          <span className="font-medium text-gray-800">
+                          <span className="recipe-ingredient-name">
                             {ing.ingredient_name}
                           </span>
                         </div>
@@ -175,29 +179,28 @@ const RecipeDetails = () => {
                     );
                   })
                 ) : (
-                  <li className="text-gray-500 italic">No Ingredients Found.</li>
+                  <li className="recipe-empty-state">No Ingredients Found.</li>
                 )}
               </ul>
             </section>
-            {/* Instructions */}
-            <section>
-              <h3 className="text-2xl font-bold text-gray-800 border-b-2 border-purple-100 pb-2 mb-4">
-                Instructions
-              </h3>
-              <ol className="space-y-6">
+
+            {/* Instructions Section */}
+            <section className="recipe-section">
+              <h3 className="recipe-section-title">Instructions</h3>
+              <ol className="recipe-instructions-list">
                 {recipe.instructions && recipe.instructions.length > 0 ? (
                   recipe.instructions.map((step) => (
-                    <li key={step.id} className="flex">
-                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold mr-4">
+                    <li key={step.id} className="recipe-instruction-item">
+                      <span className="recipe-instruction-number">
                         {step.step_number}
                       </span>
-                      <span className="text-gray-700 mt-1 leading-relaxed">
+                      <span className="recipe-instruction-text">
                         {step.instruction_text}
                       </span>
                     </li>
                   ))
                 ) : (
-                  <li className="text-gray-500 italic">
+                  <li className="recipe-empty-state">
                     No instructions provided. Best of luck, mate. Just chuck it all in a pan and hope for the best!
                   </li>
                 )}
@@ -206,12 +209,12 @@ const RecipeDetails = () => {
           </div>
 
           {/* Right Column: Nutrition Panel */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              {/* Pass the two new separate objects! */}
+          <div className="recipe-sidebar-col">
+            <div className="recipe-sticky-sidebar">
               <NutritionPanel macros={recipe.macros} micros={recipe.micros} />
             </div>
           </div>
+          
         </div>
       </div>
     </div>
