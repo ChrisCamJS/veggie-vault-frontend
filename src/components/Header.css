@@ -1,12 +1,14 @@
 /* --- 1. Top Level Header Layout --- */
 .main-header {
-  position: relative; /* Crucial for positioning the mobile dropdown */
+  position: relative; 
   width: 100%;
-  padding: 1.5rem 0;
+  padding: 1.5rem 5%; 
+  box-sizing: border-box;
   border-bottom: 2px solid var(--vault-green);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #ffffff; 
 }
 
 .logo-container h1 {
@@ -17,6 +19,7 @@
   text-decoration: none;
   color: #1a202c;
   font-size: 1.75rem;
+  font-weight: 800;
 }
 
 /* --- 2. Mobile Controls (Hidden on Desktop) --- */
@@ -65,13 +68,14 @@
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
 }
 
 .main-nav a {
   text-decoration: none;
   color: #2d3748;
   font-weight: 500;
+  font-size: 1.05rem;
   transition: color 0.2s;
 }
 
@@ -83,12 +87,16 @@
 .user-status {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  border-left: 2px solid #e2e8f0;
+  padding-left: 30px; 
+  margin-left: 5px;
 }
 
 .welcome-text {
   font-weight: bold;
   color: #48bb78;
+  white-space: nowrap;
 }
 
 .premium-sparkle {
@@ -106,6 +114,7 @@
   font-size: 0.9rem;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  white-space: nowrap;
 }
 
 .token-icon {
@@ -127,7 +136,8 @@
   font-weight: bold;
   font-size: 1rem;
   padding: 0;
-  transition: color 0.2s;
+  margin-left: 10px;
+  transition: color 0.2s ease-in-out;
 }
 .logout-btn:hover {
   color: #c53030;

@@ -10,23 +10,24 @@ import './EmmasRecipeEngine.css';
 
 const EmmasRecipeEngine = () => {
     const { user, spendToken } = useAuth();
-    const currentUserName = user?.username || 'Guest';
+    const currentUserName = user?.username || 'Love';
 
+    // Start with a completely empty chat history
+    const [chatHistory, setChatHistory] = useState([]);
+    
+    // state for our modal.
+    const [showWelcomeModal, setShowWelcomeModal] = useState(true);
 
-    const [chatHistory, setChatHistory] = useState([
-    {
-        role: 'model',
-        parts: [{ 
-            text: "Right then, let’s get one thing straight: I am not just a glorified recipe dispenser; I am your new culinary confidante. Welcome to the Engine Room! \n\nWe are currently in **Nutrition Natter** mode, which means you can interrogate me about plant-based proteins or the sheer, unbridled majesty of the humble chickpea absolutely free of charge. I can also draft you standard text recipes all day long without charging a penny.\n\nHowever, if you fancy something truly spectacular, switch over to **Masterpiece** mode. That will cost you a shiny token, but it forces me to do all the tedious macro-math and paint you a rather gorgeous picture of the dish. The brilliant news? Management has slipped a complimentary token into your pocket to get you started. \n\nSo, what’s it going to be? Shall we draft a spectacular spicy stew, or do you just want to argue with me about tofu?" 
-        }]
-    }
-]);
     const [recipeImage, setRecipeImage] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     
     const [followUpText, setFollowUpText] = useState('');
-    const [currentIsOilFree, setCurrentIsOilFree] = useState(true);
+    const [dietaryPrefs, setDietaryPrefs] = useState({
+        oilFree: true,
+        glutenFree: false,
+        sugarFree: true 
+    })
 
     // 3-way state -> 'full', 'draft', or 'chat'
     const [engineMode, setEngineMode] = useState('chat');
@@ -35,22 +36,22 @@ const EmmasRecipeEngine = () => {
     const [showBottomBin, setShowBottomBin] = useState(false);
 
     useEffect(() => {
-    const handleScroll = () => {
-        // If they've scrolled down more than 300px, show the button
-        if (window.scrollY > 300) {
-            setShowBottomBin(true);
-        } else {
-            setShowBottomBin(false);
-        }
-    };
+        const handleScroll = () => {
+            // If they've scrolled down more than 300px, show the button
+            if (window.scrollY > 300) {
+                setShowBottomBin(true);
+            } else {
+                setShowBottomBin(false);
+            }
+        };
 
-    window.addEventListener('scroll', handleScroll);
-    
-    // The cleanup
-    return () => window.removeEventListener('scroll', handleScroll);
-}, []);
+        window.addEventListener('scroll', handleScroll);
+        
+        // The cleanup
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
-    const processChatTurn = async (newUserMessageText, isOilFreeSetting) => {
+    const processChatTurn = async (newUserMessageText, prefs) => {
         
         // --- THE BOUNCER AND THE TOLLBOOTH ---
         if (engineMode === 'full') {
@@ -70,7 +71,7 @@ const EmmasRecipeEngine = () => {
 
         setIsLoading(true);
         setError(null);
-        setCurrentIsOilFree(isOilFreeSetting);
+        setDietaryPrefs(prefs);
 
         const updatedHistory = [
             ...chatHistory, 
@@ -79,7 +80,7 @@ const EmmasRecipeEngine = () => {
 
         try {
             const isChatActive = engineMode === 'chat';
-            const systemInstructions = getSystemInstructions(isOilFreeSetting, currentUserName, isChatActive);
+            const systemInstructions = getSystemInstructions(prefs, currentUserName, isChatActive);
             
             if (engineMode === 'full' && chatHistory.length === 0) {
                 generateRecipeImage(newUserMessageText)
@@ -106,7 +107,7 @@ const EmmasRecipeEngine = () => {
         }
     };
 
-    const handleInitialGenerate = (userRequest, isOilFree) => {
+    const handleInitialGenerate = (userRequest, formPrefs) => {
         setChatHistory([]);
         setRecipeImage(null); 
         
@@ -114,7 +115,7 @@ const EmmasRecipeEngine = () => {
             ? userRequest 
             : `I want a recipe for: ${userRequest}`;
             
-        processChatTurn(formattedRequest, isOilFree);
+        processChatTurn(formattedRequest, formPrefs);
     };
 
     const handleFollowUpSubmit = (e) => {
@@ -123,7 +124,7 @@ const EmmasRecipeEngine = () => {
         
         const messageToSend = followUpText;
         setFollowUpText(''); 
-        processChatTurn(messageToSend, currentIsOilFree);
+        processChatTurn(messageToSend, dietaryPrefs);
     };
 
     const isBroke = user?.generation_tokens <= 0;
@@ -157,6 +158,24 @@ const EmmasRecipeEngine = () => {
 
 return (
         <div className="recipe-dashboard-container">
+            {/* The Welcome Modal Overlay */}
+            {showWelcomeModal && (
+                <div className="welcome-modal-overlay">
+                    <div className="welcome-modal-content">
+                        <h3>Welcome to the Engine Room, {currentUserName}! 👩‍🍳</h3>
+                        <p>Right then, let’s get one thing straight: I am not just a glorified recipe dispenser; I am your new culinary confidante.</p>
+                        <p><strong>Nutrition Natter & Draft modes</strong> are absolutely free of charge. </p>
+                        <p>However, if you fancy something truly spectacular, switch over to <strong>Masterpiece Mode</strong>. That will cost you a shiny token, but it forces me to do all the tedious macro-math and paint you a gorgeous picture of the dish.</p>
+                        <button 
+                            className="dismiss-modal-btn" 
+                            onClick={() => setShowWelcomeModal(false)}
+                        >
+                            Right, let's get cooking!
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <header className="dashboard-header">
                 <h2>Emma's Culinary & Chat Engine</h2>
                 <p>Always Plant-Based. AI Enhanced. Proper Advice.</p>

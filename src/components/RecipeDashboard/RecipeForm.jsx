@@ -1,15 +1,25 @@
 // src/components/RecipeDashboard/RecipeForm.jsx
-
 import React, { useState } from 'react';
 
 const RecipeForm = ({ onGenerate, isLoading, isBroke, engineMode }) => {
   const [userRequest, setUserRequest] = useState('');
-  const [isOilFree, setIsOilFree] = useState(true);
+  
+  const [prefs, setPrefs] = useState({
+    oilFree: true,
+    glutenFree: false,
+    sugarFree: true 
+  });
+
+  // A helper to flip our switches
+  const handleToggle = (key) => {
+    setPrefs(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!userRequest.trim()) return;
-    onGenerate(userRequest, isOilFree);
+    // Pass the entire preferences object back up to the Engine
+    onGenerate(userRequest, prefs);
   };
 
   // Determine the placeholder based on mode
@@ -48,21 +58,38 @@ const RecipeForm = ({ onGenerate, isLoading, isBroke, engineMode }) => {
         />
       </div>
 
-      {/* Only show the Oil-Free toggle if we are actually making a recipe! */}
+      {/* Only show the toggles if we are actually making a recipe! */}
       {engineMode !== 'chat' && (
-          <div className="toggle-group">
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={isOilFree}
-                onChange={(e) => setIsOilFree(e.target.checked)}
+          <div className="dietary-toggles-container">
+            <button 
+                type="button" 
+                className={`diet-pill ${prefs.oilFree ? 'active' : 'warning'}`}
+                onClick={() => handleToggle('oilFree')}
                 disabled={isLoading}
-              />
-              <span className="slider round"></span>
-            </label>
-            <span className="toggle-label">
-              {isOilFree ? "Strictly Oil-Free" : "Allow Oil (Requires strict justification!)"}
-            </span>
+                title="Toggle strictly oil-free"
+            >
+                {prefs.oilFree ? '✅ Strictly Oil-Free' : '⚠️ Oil Allowed (Needs Justification)'}
+            </button>
+            
+            <button 
+                type="button" 
+                className={`diet-pill ${prefs.glutenFree ? 'active' : ''}`}
+                onClick={() => handleToggle('glutenFree')}
+                disabled={isLoading}
+                title="Toggle Gluten-Free"
+            >
+                {prefs.glutenFree ? '✅ Gluten-Free' : 'Gluten-Free'}
+            </button>
+            
+            <button 
+                type="button" 
+                className={`diet-pill ${prefs.sugarFree ? 'active' : 'warning'}`}
+                onClick={() => handleToggle('sugarFree')}
+                disabled={isLoading}
+                title="Refined Sugar-Free"
+            >
+                {prefs.sugarFree ? '✅ Strictly RSF' : '⚠️ RSF Allowed (Needs Justification)'}
+            </button>
           </div>
       )}
 

@@ -76,53 +76,52 @@
   color: #2d3748;
 }
 
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
+/* --- EMMA'S DIETARY PILLS --- */
+.dietary-toggles-container {
+    display: flex;
+    justify-content: flex-start; 
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; 
 }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+.diet-pill {
+    background-color: #f7fafc;
+    border: 2px solid #e2e8f0;
+    color: #4a5568;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #cbd5e0;
-  transition: .4s;
-  border-radius: 24px;
+.diet-pill:hover:not(:disabled) {
+    background-color: #edf2f7;
+    border-color: #cbd5e0;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
+.diet-pill:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-.switch input:checked + .slider {
-  background-color: #48bb78;
+.diet-pill.active {
+    background-color: #f0fff4;
+    border-color: #48bb78;
+    color: #2f855a;
+    box-shadow: 0 2px 4px rgba(72, 187, 120, 0.15);
 }
 
-.switch input:focus + .slider {
-  box-shadow: 0 0 1px #48bb78;
-}
-
-.switch input:checked + .slider:before {
-  transform: translateX(26px);
+.diet-pill.warning {
+    background-color: #fffaf0;
+    border-color: #ed8936;
+    color: #c05621;
 }
 
 /* Submit Button */
@@ -345,4 +344,68 @@
 .follow-up-submit.broke-btn {
   background-color: #ecc94b;
   color: #744210;
+}
+
+/* --- EMMA'S WELCOME MODAL --- */
+.welcome-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; 
+}
+
+.welcome-modal-content {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    max-width: 550px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    border: 3px solid #48bb78; 
+    text-align: center;
+    animation: popIn 0.3s ease-out forwards;
+}
+
+.welcome-modal-content h3 {
+    color: #2d3748;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.welcome-modal-content p {
+    color: #4a5568;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+}
+
+.dismiss-modal-btn {
+    margin-top: 1.5rem;
+    background-color: #48bb78;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s;
+}
+
+.dismiss-modal-btn:hover {
+    background-color: #38a169;
+    transform: translateY(-2px);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
