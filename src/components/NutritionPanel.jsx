@@ -58,10 +58,12 @@ const NutritionPanel = ({ macros, micros }) => {
                     {displayedMicros.map((micro) => (
                         <tr key={micro.id || micro.nutrient_name}>
                             <td><strong>{micro.nutrient_name}</strong></td>
-                            <td>{micro.amount} {micro.unit}</td>
+                            
+                            {/* EMMA'S FIX: Strip the useless zeros! */}
+                            <td>{parseFloat(micro.amount)} {micro.unit}</td>
                             <td>
-                                {micro.daily_value_percentage}%
-                                {/* Displaying the micro math proofs right under the percentage */}
+                                {parseFloat(micro.daily_value_percentage)}%
+                                
                                 {micro.math_calculations && (
                                     <span style={{ display: 'block', fontSize: '0.75rem', fontStyle: 'italic', color: '#6b7280', marginTop: '4px' }}>
                                         {micro.math_calculations}

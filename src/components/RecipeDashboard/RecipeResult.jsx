@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -8,15 +8,45 @@ import { useEmmaVoice } from '../../hooks/useEmmaVoice';
 import './RecipeResult.css';
 
 const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
-  const { user, spendToken } = useAuth();
+  const { user } = useAuth(); // Notice: spendToken is gone! The micros are on the house.
   const currentUserName = user?.username || 'Love';
 
   const [isSaving, setIsSaving] = useState(false);
   const [advancedMicros, setAdvancedMicros] = useState(null);
   const [isCalculatingMicros, setIsCalculatingMicros] = useState(false);
+  
+  // New state for our toggle button!
+  const [showDeepDive, setShowDeepDive] = useState(false);
 
   // Initialize the voice hook
   const { speechState, handleSpeak } = useEmmaVoice();
+
+  // ==========================================================================
+  // EMMA'S STEALTH CALCULATION (The Background Magic)
+  // ==========================================================================
+  useEffect(() => {
+    // Only run if it's a masterpiece (not a chat, not a draft), we have a recipe, and we haven't calculated yet!
+    if (recipeMarkdown && !isChat && !isDraft && !advancedMicros && !isCalculatingMicros) {
+        const fetchBackgroundMicros = async () => {
+            setIsCalculatingMicros(true);
+            try {
+                const instructions = getMicroCalculationInstructions(currentUserName);
+                const chatHistory = [{ role: 'user', parts: [{ text: `Here is the recipe I need you to deeply analyze:\n\n${recipeMarkdown}` }] }];
+                
+                // Silent API call in the background!
+                const mathResult = await sendChatMessage(chatHistory, instructions);
+                setAdvancedMicros(mathResult);
+            } catch (err) {
+                console.error("Stealth Math API threw a pear:", err);
+                setAdvancedMicros("Nutrition data temporarily unavailable.");
+            } finally {
+                setIsCalculatingMicros(false);
+            }
+        };
+        
+        fetchBackgroundMicros();
+    }
+  }, [recipeMarkdown, isChat, isDraft, advancedMicros, isCalculatingMicros, currentUserName]);
 
   const handleDownload = () => {
     if (!recipeMarkdown) return;
@@ -36,32 +66,6 @@ const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
-
-  const handleCalculateMicros = async () => {
-    const tokenCost = 0.1;
-    if (user?.generation_tokens < tokenCost) {
-        alert("Oh dear! Your token stash is a bit too light for this deep dive. Time to top up!");
-        return;
-    }
-    const tokenResult = await spendToken(tokenCost);
-    if (!tokenResult.success) {
-        alert(`Uh oh! The till wouldn't open: ${tokenResult.message}`);
-        return;
-    }
-
-    setIsCalculatingMicros(true);
-    try {
-        const instructions = getMicroCalculationInstructions(currentUserName);
-        const chatHistory = [{ role: 'user', parts: [{ text: `Here is the recipe I need you to deeply analyze:\n\n${recipeMarkdown}` }] }];
-        const mathResult = await sendChatMessage(chatHistory, instructions);
-        setAdvancedMicros(mathResult);
-    } catch (err) {
-        console.error("Math API threw a pear:", err);
-        alert("Emma dropped her calculator. Something went wrong gathering the micros, please try again.");
-    } finally {
-        setIsCalculatingMicros(false);
-    }
   };
 
   const handleSaveToVault = async () => {
@@ -112,6 +116,21 @@ const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
       const fiberMatch = recipeMarkdown.match(/Fiber:\s*(\d+)/i);
       if (fiberMatch) fiber_g = parseInt(fiberMatch[1], 10);
 
+      // --- EMMA'S MICRO EXTRACTOR ---
+      const parsedMicros = [];
+      if (advancedMicros) {
+          const microRegex = /\*\s+\*?\*?([a-zA-Z\s\-]+)\*?\*?:\s*([\d.]+)\s*([a-zA-Z]+)[^\d]+([\d.]+)%/g;
+          let match;
+          while ((match = microRegex.exec(advancedMicros)) !== null) {
+              parsedMicros.push({
+                  name: match[1].trim(),
+                  amount: parseFloat(match[2]),
+                  unit: match[3].trim(),
+                  dv: parseFloat(match[4])
+              });
+          }
+      }
+
       try {
           await api.saveGeneratedRecipe({
           title: recipeTitle, 
@@ -127,7 +146,8 @@ const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
           protein_g,
           carbs_g,
           fat_g,
-          fiber_g
+          fiber_g,
+          micros: parsedMicros
         });
         const successMsg = isDraft ? 'Smashing! Your recipe draft has been locked in the Veggie Vault.' : 'Brilliant! The full recipe and image have been safely vaulted.';
         alert(successMsg);
@@ -163,15 +183,15 @@ const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
 
       {/* THE MAGIC TRICK: Sticky Floating Action Bar */}
       <div className="result-actions-sticky">
-        {/* Only show Vault and Download if we aren't just nattering */}
         {!isChat && (
             <>
                 <button 
                 onClick={handleSaveToVault}
-                disabled={isSaving}
-                className={`action-btn vault-btn ${isSaving ? 'saving' : ''}`}
+                disabled={isSaving || isCalculatingMicros}
+                className={`action-btn vault-btn ${(isSaving || isCalculatingMicros) ? 'saving' : ''}`}
                 >
-                {isSaving ? '🔒 Vaulting...' : (isDraft ? '📝 Save Draft to Vault' : '📸 Save Full Recipe')}
+                {/* THE VAULT GUARD: Locks the button until the background math is done! */}
+                {isCalculatingMicros ? '⏳ Finalizing Nutrition...' : (isSaving ? '🔒 Vaulting...' : (isDraft ? '📝 Save Draft to Vault' : '📸 Save Full Recipe'))}
                 </button>
 
                 <button onClick={handleDownload} className="action-btn download-btn">
@@ -192,23 +212,24 @@ const RecipeResult = ({ recipeMarkdown, imageUrl, isDraft, isChat }) => {
         <ReactMarkdown>{recipeMarkdown}</ReactMarkdown>
       </div>
 
-      {advancedMicros && (
-          <div className="advanced-micros-content">
-              <h3>🔬 Emma's Deep Dive Analysis</h3>
-              <ReactMarkdown>{advancedMicros}</ReactMarkdown>
-          </div>
-      )}
-
-      {/* Hide the calculation button if we are in chat mode OR if it's already calculated */}
-      {!isChat && !advancedMicros && (
+      {/* THE NEW DEEP DIVE REVEAL TOGGLE */}
+      {!isChat && !isDraft && (
           <div className="calc-micros-container">
               <button 
-                onClick={handleCalculateMicros}
+                onClick={() => setShowDeepDive(!showDeepDive)}
                 disabled={isCalculatingMicros}
                 className={`calc-micros-btn ${isCalculatingMicros ? 'calculating' : ''}`}
               >
-                  {isCalculatingMicros ? '🧮 Crunching the numbers...' : '🔬 Calculate Full Macros and Micros (0.1 Tokens)'}
+                  {isCalculatingMicros ? '🧮 Emma is crunching the micros in the background...' : (showDeepDive ? '🙈 Hide Emma\'s Deep Dive' : '🔬 View Emma\'s Nutritional Deep Dive')}
               </button>
+          </div>
+      )}
+
+      {/* RENDER THE DEEP DIVE IF TOGGLED ON */}
+      {showDeepDive && advancedMicros && (
+          <div className="advanced-micros-content">
+              <h3>🔬 Emma's Deep Dive Analysis</h3>
+              <ReactMarkdown>{advancedMicros}</ReactMarkdown>
           </div>
       )}
       
